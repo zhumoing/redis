@@ -74,7 +74,7 @@ int stringmatchlen(const char *pattern, int patternLen,
             break;
         case '[':
         {
-            int not, match;
+            int not, match, is_square_bracket_close;
 
             pattern++;
             patternLen--;
@@ -84,13 +84,18 @@ int stringmatchlen(const char *pattern, int patternLen,
                 patternLen--;
             }
             match = 0;
-            while(1) {
+            is_square_bracket_close = 0;
+            /* Exit "while(!match)" when match = 1 
+             * or pattern[0] == ']'  =>  is_square_bracket_close  = 1
+             * or patternLen == 0 */
+            while(!match) {
                 if (pattern[0] == '\\' && patternLen >= 2) {
                     pattern++;
                     patternLen--;
                     if (pattern[0] == string[0])
                         match = 1;
                 } else if (pattern[0] == ']') {
+                    is_square_bracket_close = 1;
                     break;
                 } else if (patternLen == 0) {
                     pattern--;
@@ -126,10 +131,18 @@ int stringmatchlen(const char *pattern, int patternLen,
                 pattern++;
                 patternLen--;
             }
-            if (not)
-                match = !match;
-            if (!match)
-                return 0; /* no match */
+    
+            if (match == not)
+                return 0;
+
+            if (!is_square_bracket_close) {
+                while (pattern[0] != ']' && patternLen > 0 ) {
+                    pattern++;
+                    patternLen--;
+                    }
+                }
+            }
+
             string++;
             stringLen--;
             break;
